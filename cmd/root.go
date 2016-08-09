@@ -58,6 +58,7 @@ func init() {
 		"the message will only be sent to the device with the given MAC address")
 	RootCmd.PersistentFlags().StringSliceVar(&ips, "ip", []string{},
 		"the message will only be sent to the given IPv4/6 addresses")
+
 	RootCmd.PersistentFlags().IntVar(&timeout, "timeout", controlifx.NormalDiscoverTimeout,
 		"devices will be discovered for the duration of the timeout in milliseconds until continuing with sending the message; 0 = no timeout")
 	RootCmd.PersistentFlags().IntVar(&count, "count", -1,
