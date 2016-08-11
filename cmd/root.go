@@ -4,9 +4,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/bionicrm/clifx/protocol"
 	"github.com/bionicrm/controlifx"
-	"log"
 	"math/rand"
 	"time"
+	"fmt"
+	"os"
 )
 
 var (
@@ -16,24 +17,15 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			conn, err := protocol.Discover(mac, labels, ips, timeout, count)
 			if err != nil {
-				log.Fatalln(err)
+				errorOut(err)
 			}
 
-			// TODO: remove testing
-			builder := controlifx.LanDeviceMessageBuilder{}
-			payload := controlifx.LightSetColorLanMessage{
-				Color:controlifx.HSBK{
-					Hue:uint16(rand.Intn(0xffff)),
-					Saturation:0xffff,
-					Brightness:0xffff,
-					Kelvin:3500,
-				},
-				Duration:1024,
+			msg, err := protocol.CreateMessage(msgType, payload)
+			if err != nil {
+				errorOut(err)
 			}
-			msg := builder.LightSetColor(payload)
-
 			if err := conn.SendToAll(msg); err != nil {
-				log.Fatalln(err)
+				errorOut(err)
 			}
 		},
 	}
@@ -46,6 +38,9 @@ var (
 
 	timeout int
 	count   int
+
+	msgType string
+	payload []string
 )
 
 func init() {
@@ -63,4 +58,15 @@ func init() {
 		"devices will be discovered for the duration of the timeout in milliseconds until continuing with sending the message; 0 = no timeout")
 	RootCmd.PersistentFlags().IntVar(&count, "count", -1,
 		"only the given number of devices will be discovered before continuing with sending the message")
+
+	RootCmd.PersistentFlags().StringVar(&msgType, "type", "GetService",
+		"the name of the type of message to be sent")
+	RootCmd.PersistentFlags().StringSliceVar(&payload, "payload", []string{},
+		"the payload values (if applicable) in the form 'FieldName:value,FieldName:SubFieldName:value,...'")
+
+}
+
+func errorOut(err error) {
+	fmt.Fprintln(os.Stderr, err)
+	os.Exit(-1)
 }

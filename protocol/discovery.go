@@ -13,7 +13,9 @@ func Discover(mac string, labels, ips []string, timeout int, count int) (*contro
 	}
 
 	if mac == "" && len(labels) == 0 && len(ips) == 0 {
-		// Discover all devices with timeout.
+		if count > -1 {
+			return conn, conn.DiscoverNDevices(count)
+		}
 		return conn, conn.DiscoverAllDevices()
 	}
 
