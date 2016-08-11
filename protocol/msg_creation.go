@@ -15,6 +15,8 @@ func CreateMessage(msgType string, payloadStrs []string) (msg controlifx.Sendabl
 		return msg, errors.New("unknown message type '" + msgType + "'")
 	}
 
+	var result []reflect.Value
+
 	if method.Type().NumIn() == 1 {
 		payload := reflect.Indirect(reflect.New(method.Type().In(0)))
 
@@ -31,18 +33,21 @@ func CreateMessage(msgType string, payloadStrs []string) (msg controlifx.Sendabl
 					}
 					payloadField.Set(value)
 				} else {
+					payloadFieldStr := payloadField.Type().Name()
 					payloadField = payloadField.FieldByName(field)
 					if !payloadField.IsValid() {
-						return msg, errors.New("unknown field '" + field + "' on " + payloadField.String())
+						return msg, errors.New("unknown field '" + field + "' on " + payloadFieldStr + " struct")
 					}
 				}
 			}
 		}
 
-		return method.Call([]reflect.Value{payload})[0].Interface().(controlifx.SendableLanMessage), nil
+		result = method.Call([]reflect.Value{payload})
+	} else {
+		result = method.Call([]reflect.Value{})
 	}
 
-	return method.Call([]reflect.Value{})[0].Interface().(controlifx.SendableLanMessage), nil
+	return result[0].Interface().(controlifx.SendableLanMessage), nil
 }
 
 func sToValFor(s string, field reflect.Value) (v reflect.Value, err error) {
