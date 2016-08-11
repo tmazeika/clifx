@@ -2,61 +2,113 @@ package protocol
 
 import (
 	"github.com/bionicrm/controlifx"
-	"fmt"
-	"strings"
-	"reflect"
 	"errors"
+	"fmt"
+	"encoding/json"
+	"encoding"
 )
 
-func SendAndReceiveMessages(conn *controlifx.Connector, msg controlifx.SendableLanMessage, get []string) error {
-	responseType, code, err := getResponseType(msg)
+type responseEntry struct {
+	Device   controlifx.Device
+	Response encoding.BinaryUnmarshaler
+}
+
+type ackResponseEntry struct {
+	Device   controlifx.Device
+}
+
+func SendAndReceiveMessages(conn *controlifx.Connector, msg controlifx.SendableLanMessage, get, pretty, ackOnly bool) error {
+	code, err := getResponseCode(msg)
 	if err != nil {
 		return err
 	}
+	if ackOnly {
+		msg.Header.FrameAddress.AckRequired = true
+	}
 	recMsgs, err := conn.GetResponseFromAll(msg, func(msg controlifx.ReceivableLanMessage) bool {
-		return msg.Header.ProtocolHeader.Type == code
+		if ackOnly {
+			return msg.Header.ProtocolHeader.Type == controlifx.AcknowledgementType
+		} else {
+			return msg.Header.ProtocolHeader.Type == code
+		}
 	})
 	if err != nil {
 		return err
 	}
 
-	for device, msg := range recMsgs {
-		response := reflect.Indirect(reflect.ValueOf(msg.Payload).Convert(responseType))
+	if get {
+		var jsonOut []interface{}
 
-		fmt.Printf("[%s] ", device.Addr.String())
-
-		for i, getValue := range get {
-			parts := strings.Split(getValue, ":")
-
-			responseField := response
-			for _, field := range parts {
-				payloadFieldStr := responseField.Type().Name()
-				responseField = responseField.FieldByName(field)
-				if !responseField.IsValid() {
-					return errors.New("unknown field '" + field + "' on " + payloadFieldStr + " struct")
-				}
+		for device, msg := range recMsgs {
+			if msg.Header.ProtocolHeader.Type == controlifx.AcknowledgementType {
+				jsonOut = append(jsonOut, ackResponseEntry{
+					Device: device,
+				})
+			} else {
+				jsonOut = append(jsonOut, responseEntry{
+					Device: device,
+					Response: msg.Payload,
+				})
 			}
-			fmt.Printf("%s: %v", getValue, responseField.Interface())
-			if i < len(get)-1 {
-				fmt.Print(",")
-			}
-			fmt.Print(" ")
 		}
 
-		fmt.Println()
+		var err error
+		var jsonB []byte
+
+		if pretty {
+			jsonB, err = json.MarshalIndent(jsonOut, "", "  ")
+		} else {
+			jsonB, err = json.Marshal(jsonOut)
+		}
+		if err != nil {
+			return err
+		}
+		fmt.Println(string(jsonB))
 	}
 
 	return nil
 }
 
-func getResponseType(msg controlifx.SendableLanMessage) (t reflect.Type, code uint16, _ error) {
-	// TODO: implement all
+func getResponseCode(msg controlifx.SendableLanMessage) (code uint16, _ error) {
 	switch msg.Header.ProtocolHeader.Type {
 	case controlifx.GetServiceType:
-		t = reflect.TypeOf(&controlifx.StateServiceLanMessage{})
 		code = controlifx.StateServiceType
+	case controlifx.GetHostInfoType:
+		code = controlifx.StateHostInfoType
+	case controlifx.GetHostFirmwareType:
+		code = controlifx.StateHostFirmwareType
+	case controlifx.GetWifiInfoType:
+		code = controlifx.StateWifiInfoType
+	case controlifx.GetWifiFirmwareType:
+		code = controlifx.StateWifiFirmwareType
+	case controlifx.GetPowerType:
+		code = controlifx.StatePowerType
+	case controlifx.SetPowerType:
+		code = controlifx.AcknowledgementType // ack only
+	case controlifx.GetLabelType:
+		code = controlifx.StateLabelType
+	case controlifx.SetLabelType:
+		code = controlifx.AcknowledgementType // ack only
+	case controlifx.GetVersionType:
+		code = controlifx.StateVersionType
+	case controlifx.GetInfoType:
+		code = controlifx.StateInfoType
+	case controlifx.GetLocationType:
+		code = controlifx.StateLocationType
+	case controlifx.GetGroupType:
+		code = controlifx.StateGroupType
+	case controlifx.EchoRequestType:
+		code = controlifx.EchoResponseType
+	case controlifx.LightGetType:
+		code = controlifx.LightStateType
+	case controlifx.LightSetColorType:
+		code = controlifx.LightStateType // as per protocol
+	case controlifx.LightGetPowerType:
+		code = controlifx.LightStatePowerType
+	case controlifx.LightSetPowerType:
+		code = controlifx.LightStatePowerType // as per protocol
 	default:
-		return t, code, errors.New("no response can be expected for that message type")
+		return code, errors.New("no response can be expected for that message type")
 	}
 	return
 }

@@ -4,8 +4,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/bionicrm/clifx/protocol"
 	"github.com/bionicrm/controlifx"
-	"math/rand"
-	"time"
 	"fmt"
 	"os"
 )
@@ -24,8 +22,8 @@ var (
 			if err != nil {
 				errorOut(err)
 			}
-			if len(get) > 0 {
-				if err := protocol.SendAndReceiveMessages(conn, msg, get); err != nil {
+			if get {
+				if err := protocol.SendAndReceiveMessages(conn, msg, get, pretty, ackOnly); err != nil {
 					errorOut(err)
 				}
 			} else if err := conn.SendToAll(msg); err != nil {
@@ -45,13 +43,12 @@ var (
 
 	msgType string
 	payload []string
-	get     []string
+	get     bool
+	pretty  bool
+	ackOnly bool
 )
 
 func init() {
-	// TODO: remove testing
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	RootCmd.PersistentFlags().StringSliceVar(&labels, "label", []string{},
 		"the message will only be sent to devices with one of the given labels")
 	RootCmd.PersistentFlags().StringVar(&mac, "mac", "",
@@ -68,8 +65,12 @@ func init() {
 		"the name of the type of message to be sent")
 	RootCmd.PersistentFlags().StringSliceVar(&payload, "payload", []string{},
 		"the payload values (if applicable) in the form 'FieldName:value,FieldName:SubFieldName:value,...'")
-	RootCmd.PersistentFlags().StringSliceVar(&get, "get", []string{},
-		"the payload values to print out of all responses in the form 'FieldName,FieldName:SubFieldName,...'")
+	RootCmd.PersistentFlags().BoolVar(&get, "get", false,
+		"prints all responses in JSON form")
+	RootCmd.PersistentFlags().BoolVar(&pretty, "pretty-json", false,
+		"pretty prints any JSON output")
+	RootCmd.PersistentFlags().BoolVar(&ackOnly, "ack-only", false,
+		"only prints an acknowledgement response; does nothing if 'get' is not specified")
 }
 
 func errorOut(err error) {
