@@ -24,7 +24,11 @@ var (
 			if err != nil {
 				errorOut(err)
 			}
-			if err := conn.SendToAll(msg); err != nil {
+			if len(get) > 0 {
+				if err := protocol.SendAndReceiveMessages(conn, msg, get); err != nil {
+					errorOut(err)
+				}
+			} else if err := conn.SendToAll(msg); err != nil {
 				errorOut(err)
 			}
 		},
@@ -41,6 +45,7 @@ var (
 
 	msgType string
 	payload []string
+	get     []string
 )
 
 func init() {
@@ -63,7 +68,8 @@ func init() {
 		"the name of the type of message to be sent")
 	RootCmd.PersistentFlags().StringSliceVar(&payload, "payload", []string{},
 		"the payload values (if applicable) in the form 'FieldName:value,FieldName:SubFieldName:value,...'")
-
+	RootCmd.PersistentFlags().StringSliceVar(&get, "get", []string{},
+		"the payload values to print out of all responses in the form 'FieldName,FieldName:SubFieldName,...'")
 }
 
 func errorOut(err error) {
