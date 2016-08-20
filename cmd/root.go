@@ -16,18 +16,15 @@ var (
 			var conn controlifx.Connector
 			var devices []controlifx.Device
 			discovered := len(macs) > 0 || len(labels) > 0 || len(ips) > 0 || count > 0
-
+			msg, err := protocol.CreateMessage(msgType, payload)
+			if err != nil {
+				errorOut(err)
+			}
 			if discovered {
-				var err error
 				conn, devices, err = protocol.Discover(macs, labels, ips, timeout, count)
 				if err != nil {
 					errorOut(err)
 				}
-			}
-
-			msg, err := protocol.CreateMessage(msgType, payload)
-			if err != nil {
-				errorOut(err)
 			}
 			if get {
 				if err := protocol.SendAndReceiveMessages(conn, devices, msg, get, pretty, ackOnly); err != nil {
