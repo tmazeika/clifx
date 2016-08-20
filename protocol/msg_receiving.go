@@ -25,13 +25,19 @@ func SendAndReceiveMessages(conn controlifx.Connector, devices []controlifx.Devi
 	if ackOnly {
 		msg.Header.FrameAddress.AckRequired = true
 	}
-	recMsgs, err := conn.SendToAndGet(msg, func(msg controlifx.ReceivableLanMessage) bool {
+	var recMsgs map[controlifx.Device]controlifx.ReceivableLanMessage
+	filter := func(msg controlifx.ReceivableLanMessage) bool {
 		if ackOnly {
 			return msg.Header.ProtocolHeader.Type == controlifx.AcknowledgementType
 		} else {
 			return msg.Header.ProtocolHeader.Type == code
 		}
-	}, devices)
+	}
+	if len(devices) > 0 {
+		recMsgs, err = conn.SendToAndGet(msg, filter, devices)
+	} else {
+		recMsgs, err = conn.SendToAllAndGet(msg, filter)
+	}
 	if err != nil {
 		return err
 	}

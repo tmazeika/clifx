@@ -13,9 +13,16 @@ var (
 		Use: "lifx",
 		Short: "Control LIFX devices from the command line",
 		Run: func(cmd *cobra.Command, args []string) {
-			conn, devices, err := protocol.Discover(macs, labels, ips, timeout, count)
-			if err != nil {
-				errorOut(err)
+			var conn controlifx.Connector
+			var devices []controlifx.Device
+			discovered := len(macs) > 0 || len(labels) > 0 || len(ips) > 0 || count > 0
+
+			if discovered {
+				var err error
+				conn, devices, err = protocol.Discover(macs, labels, ips, timeout, count)
+				if err != nil {
+					errorOut(err)
+				}
 			}
 
 			msg, err := protocol.CreateMessage(msgType, payload)
@@ -26,8 +33,14 @@ var (
 				if err := protocol.SendAndReceiveMessages(conn, devices, msg, get, pretty, ackOnly); err != nil {
 					errorOut(err)
 				}
-			} else if err := conn.SendToAll(msg); err != nil {
-				errorOut(err)
+			} else if discovered {
+				if err := conn.SendTo(msg, devices); err != nil {
+					errorOut(err)
+				}
+			} else {
+				if err := conn.SendToAll(msg); err != nil {
+					errorOut(err)
+				}
 			}
 		},
 	}
