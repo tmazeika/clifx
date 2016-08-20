@@ -13,7 +13,7 @@ var (
 		Use: "lifx",
 		Short: "Control LIFX devices from the command line",
 		Run: func(cmd *cobra.Command, args []string) {
-			conn, err := protocol.Discover(mac, labels, ips, timeout, count)
+			conn, devices, err := protocol.Discover(macs, labels, ips, timeout, count)
 			if err != nil {
 				errorOut(err)
 			}
@@ -23,7 +23,7 @@ var (
 				errorOut(err)
 			}
 			if get {
-				if err := protocol.SendAndReceiveMessages(conn, msg, get, pretty, ackOnly); err != nil {
+				if err := protocol.SendAndReceiveMessages(conn, devices, msg, get, pretty, ackOnly); err != nil {
 					errorOut(err)
 				}
 			} else if err := conn.SendToAll(msg); err != nil {
@@ -35,7 +35,7 @@ var (
 	// Flags.
 
 	labels []string
-	mac    string
+	macs   []string
 	ips    []string
 
 	timeout int
@@ -51,8 +51,8 @@ var (
 func init() {
 	RootCmd.PersistentFlags().StringSliceVar(&labels, "label", []string{},
 		"the message will only be sent to devices with one of the given labels")
-	RootCmd.PersistentFlags().StringVar(&mac, "mac", "",
-		"the message will only be sent to the device with the given MAC address")
+	RootCmd.PersistentFlags().StringSliceVar(&macs, "mac", []string{},
+		"the message will only be sent to devices with one of the given MAC addresses")
 	RootCmd.PersistentFlags().StringSliceVar(&ips, "ip", []string{},
 		"the message will only be sent to the given IPv4/6 addresses")
 

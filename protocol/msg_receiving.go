@@ -17,7 +17,7 @@ type ackResponseEntry struct {
 	Device   controlifx.Device
 }
 
-func SendAndReceiveMessages(conn *controlifx.Connector, msg controlifx.SendableLanMessage, get, pretty, ackOnly bool) error {
+func SendAndReceiveMessages(conn controlifx.Connector, devices []controlifx.Device, msg controlifx.SendableLanMessage, get, pretty, ackOnly bool) error {
 	code, err := getResponseCode(msg)
 	if err != nil {
 		return err
@@ -25,20 +25,18 @@ func SendAndReceiveMessages(conn *controlifx.Connector, msg controlifx.SendableL
 	if ackOnly {
 		msg.Header.FrameAddress.AckRequired = true
 	}
-	recMsgs, err := conn.GetResponseFromAll(msg, func(msg controlifx.ReceivableLanMessage) bool {
+	recMsgs, err := conn.SendToAndGet(msg, func(msg controlifx.ReceivableLanMessage) bool {
 		if ackOnly {
 			return msg.Header.ProtocolHeader.Type == controlifx.AcknowledgementType
 		} else {
 			return msg.Header.ProtocolHeader.Type == code
 		}
-	})
+	}, devices)
 	if err != nil {
 		return err
 	}
-
 	if get {
 		var jsonOut []interface{}
-
 		for device, msg := range recMsgs {
 			if msg.Header.ProtocolHeader.Type == controlifx.AcknowledgementType {
 				jsonOut = append(jsonOut, ackResponseEntry{
@@ -51,10 +49,8 @@ func SendAndReceiveMessages(conn *controlifx.Connector, msg controlifx.SendableL
 				})
 			}
 		}
-
 		var err error
 		var jsonB []byte
-
 		if pretty {
 			jsonB, err = json.MarshalIndent(jsonOut, "", "  ")
 		} else {

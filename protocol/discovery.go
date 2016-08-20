@@ -5,68 +5,84 @@ import (
 	"net"
 	"strings"
 	"encoding/binary"
+	"fmt"
+	"os"
 )
 
-func Discover(mac string, labels, ips []string, timeout int, count int) (*controlifx.Connector, error) {
-	conn := &controlifx.Connector{
-		DiscoverTimeout:timeout,
-	}
+func Discover(macWhitelist, labelWhitelist, ipWhitelist []string, timeout int, count int) (conn controlifx.Connector, devices []controlifx.Device, err error) {
+	conn.DiscoverTimeout = timeout
 
-	if mac == "" && len(labels) == 0 && len(ips) == 0 {
+	// Used for count enforcement.
+	leftToDiscover := count
+
+	if devices, err = conn.DiscoverFilteredDevices(func(msg controlifx.ReceivableLanMessage, device controlifx.Device) (register bool, cont bool) {
+		// Register and continue until set otherwise.
+		register = true
+		cont = true
+
+		var err error
+
+		// Enforce MAC whitelist.
+		register, err = macIsWhitelisted(macWhitelist, device.Mac)
+		if err != nil {
+			// Error out.
+			fmt.Println(err)
+			os.Exit(-1)
+		}
+
+		// Enforce IP whitelist.
+		register = ipIsWhitelisted(ipWhitelist, device.Addr.IP.String())
+
+		// Enforce count.
 		if count > -1 {
-			return conn, conn.DiscoverNDevices(count)
-		}
-		return conn, conn.DiscoverAllDevices()
-	}
-
-	if mac != "" {
-		parsedMac, err := net.ParseMAC(mac)
-		if err != nil {
-			return nil, err
-		}
-
-		conn.DiscoverFilteredDevices(func(msg controlifx.ReceivableLanMessage, device controlifx.Device) (bool, bool) {
-			if macEqual(device.Mac, parsedMac) {
-				// Do register, don't continue.
-				return true, false
+			if register {
+				leftToDiscover--
 			}
-			// Don't register, do continue.
-			return false, true
-		})
-	} else if count > -1 {
-		if err := conn.DiscoverNDevices(count); err != nil {
-			return nil, err
+			cont = leftToDiscover > 0
 		}
-	} else if err := conn.DiscoverAllDevices(); err != nil {
-		return nil, err
+		return
+	}); err != nil {
+		return
 	}
 
-	if len(labels) > 0 {
+
+	// Enforce label whitelist.
+	if len(labelWhitelist) > 0 {
 		msg := controlifx.LanDeviceMessageBuilder{}.GetLabel()
-
-		recMsgs, err := conn.GetResponseFromAll(msg, controlifx.TypeFilter(&controlifx.StateLabelLanMessage{}))
-		if err != nil {
-			return nil, err
+		var recMsgs map[controlifx.Device]controlifx.ReceivableLanMessage
+		if recMsgs, err = conn.SendToAndGet(msg, controlifx.TypeFilter(&controlifx.StateLabelLanMessage{}), devices); err != nil {
+			return
 		}
-
-		// Remove devices that don't have the requested label(s).
-		for device, msg := range recMsgs {
-			var ok bool
-			label := strings.ToLower(string(msg.Payload.(*controlifx.StateLabelLanMessage).Label))
-
-			for _, acceptLabel := range labels {
-				if strings.ToLower(acceptLabel) == label {
-					ok = true
-					break
-				}
-			}
-			if !ok {
-				conn.RemoveDevice(device)
+		devices = nil
+		for device, recMsg := range recMsgs {
+			if labelIsWhitelisted(labelWhitelist, recMsg.Payload.(*controlifx.StateLabelLanMessage).Label) {
+				devices = append(devices, device)
 			}
 		}
 	}
+	return
+}
 
-	return conn, nil
+func macIsWhitelisted(whitelist []string, mac uint64) (bool, error) {
+	// All MACs are wanted if there's no whitelist.
+	if len(whitelist) == 0 {
+		return true, nil
+	}
+	var err error
+	parsedMacs := make([]net.HardwareAddr, len(whitelist))
+	for i, v := range whitelist {
+		parsedMacs[i], err = net.ParseMAC(v)
+		if err != nil {
+			goto NotWanted
+		}
+	}
+	for _, wantedMac := range parsedMacs {
+		if macEqual(mac, wantedMac) {
+			return true, nil
+		}
+	}
+	NotWanted:
+	return false, err
 }
 
 func macEqual(i uint64, b []byte) bool {
@@ -75,4 +91,27 @@ func macEqual(i uint64, b []byte) bool {
 		b = append([]byte{0, 0}, b...)
 	}
 	return i == binary.BigEndian.Uint64(b)
+}
+
+func ipIsWhitelisted(whitelist []string, ip string) bool {
+	// All IPs are wanted if there's no whitelist.
+	if len(whitelist) == 0 {
+		return true
+	}
+	for _, v := range whitelist {
+		if ip == v {
+			return true
+		}
+	}
+	return false
+}
+
+func labelIsWhitelisted(whitelist []string, label controlifx.Label) bool {
+	labelStr := strings.ToLower(string(label))
+	for _, v := range whitelist {
+		if labelStr == strings.ToLower(v) {
+			return true
+		}
+	}
+	return false
 }
