@@ -9,13 +9,11 @@ import (
 	"os"
 )
 
-func Discover(macWhitelist, labelWhitelist, ipWhitelist []string, timeout int, count int) (conn controlifx.Connector, devices []controlifx.Device, err error) {
-	conn.DiscoverTimeout = timeout
-
+func Discover(conn controlifx.Connection, labelWhitelist, macWhitelist, ipWhitelist []string, timeout, count int) (devices []controlifx.Device, err error) {
 	// Used for count enforcement.
 	leftToDiscover := count
 
-	if devices, err = conn.DiscoverFilteredDevices(func(msg controlifx.ReceivableLanMessage, device controlifx.Device) (register bool, cont bool) {
+	if devices, err = conn.DiscoverDevices(timeout, func(msg controlifx.ReceivableLanMessage, device controlifx.Device) (register, cont bool) {
 		// Register and continue until set otherwise.
 		register = true
 		cont = true
@@ -26,7 +24,7 @@ func Discover(macWhitelist, labelWhitelist, ipWhitelist []string, timeout int, c
 		register, err = macIsWhitelisted(macWhitelist, device.Mac)
 		if err != nil {
 			// Error out.
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(-1)
 		}
 
@@ -34,33 +32,50 @@ func Discover(macWhitelist, labelWhitelist, ipWhitelist []string, timeout int, c
 		register = ipIsWhitelisted(ipWhitelist, device.Addr.IP.String())
 
 		// Enforce count.
-		if count > -1 {
+		if count > 0 {
 			if register {
 				leftToDiscover--
 			}
+
 			cont = leftToDiscover > 0
 		}
+
 		return
 	}); err != nil {
 		return
 	}
 
-
 	// Enforce label whitelist.
 	if len(labelWhitelist) > 0 {
-		msg := controlifx.LanDeviceMessageBuilder{}.GetLabel()
+		msg := controlifx.GetLabel()
+
 		var recMsgs map[controlifx.Device]controlifx.ReceivableLanMessage
-		if recMsgs, err = conn.SendToAndGet(msg, controlifx.TypeFilter(&controlifx.StateLabelLanMessage{}), devices); err != nil {
+		if recMsgs, err = conn.SendToAndGet(msg, devices, controlifx.TypeFilter(controlifx.StateLabelType)); err != nil {
 			return
 		}
+
 		devices = nil
+
 		for device, recMsg := range recMsgs {
-			if labelIsWhitelisted(labelWhitelist, recMsg.Payload.(*controlifx.StateLabelLanMessage).Label) {
+			if labelIsWhitelisted(labelWhitelist, string(recMsg.Payload.(*controlifx.StateLabelLanMessage).Label)) {
 				devices = append(devices, device)
 			}
 		}
 	}
+
 	return
+}
+
+func labelIsWhitelisted(whitelist []string, label string) bool {
+	label = strings.ToLower(label)
+
+	for _, v := range whitelist {
+		if label == strings.ToLower(v) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func macIsWhitelisted(whitelist []string, mac uint64) (bool, error) {
@@ -81,6 +96,7 @@ func macIsWhitelisted(whitelist []string, mac uint64) (bool, error) {
 			return true, nil
 		}
 	}
+
 	NotWanted:
 	return false, err
 }
@@ -90,6 +106,7 @@ func macEqual(i uint64, b []byte) bool {
 	if len(b) == 6 {
 		b = append([]byte{0, 0}, b...)
 	}
+
 	return i == binary.BigEndian.Uint64(b)
 }
 
@@ -98,20 +115,12 @@ func ipIsWhitelisted(whitelist []string, ip string) bool {
 	if len(whitelist) == 0 {
 		return true
 	}
+
 	for _, v := range whitelist {
 		if ip == v {
 			return true
 		}
 	}
-	return false
-}
 
-func labelIsWhitelisted(whitelist []string, label controlifx.Label) bool {
-	labelStr := strings.ToLower(string(label))
-	for _, v := range whitelist {
-		if labelStr == strings.ToLower(v) {
-			return true
-		}
-	}
 	return false
 }
