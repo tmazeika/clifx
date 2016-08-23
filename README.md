@@ -6,7 +6,7 @@ Command line LIFX device control.
 
 If you have Go installed and `$GOPATH/bin` in your path, just run
 `go get github.com/bionicrm/clifx` and the `clifx` binary will be available.
-Otherwise, download the latest release for your platform and install it where
+Otherwise, [download the latest release](https://github.com/bionicrm/clifx/releases) for your platform and install it where
 it'll be executable.
 
 ### Introduction
