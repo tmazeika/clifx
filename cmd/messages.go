@@ -3,8 +3,9 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/bionicrm/controlifx"
-	"github.com/pkg/errors"
 	"math"
+	"net"
+	"errors"
 	"strconv"
 	"bytes"
 	"github.com/bionicrm/clifx/protocol"
@@ -375,7 +376,17 @@ func lerpToUint16(rng float64, x int) uint16 {
 }
 
 func handle(requireResByDef bool, msg controlifx.SendableLanMessage) {
-	conn, err := controlifx.Connect()
+	var conn controlifx.Connection
+	var err error
+	if broadcast == "" {
+		conn, err = controlifx.Connect()
+	} else {
+		var bcastAddr *net.UDPAddr
+		bcastAddr, err = net.ResolveUDPAddr("udp", broadcast)
+		if err == nil {
+			conn, err = controlifx.ManualConnect(bcastAddr)
+		}
+	}
 	if err != nil {
 		log.Fatalln(err)
 	}

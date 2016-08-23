@@ -23,7 +23,9 @@ var (
 
 	requireAck bool
 	requireRes bool
-	pretty bool
+	pretty     bool
+
+	broadcast  string
 )
 
 func init() {
@@ -47,4 +49,7 @@ func init() {
 		"responses will always be printed; mutually exclusive with --require-ack")
 	RootCmd.PersistentFlags().BoolVarP(&pretty, "pretty", "p", false,
 		"pretty prints any JSON output")
+
+	RootCmd.PersistentFlags().StringVar(&broadcast, "broadcast-addr", "",
+		"overrides the broadcast address when sending messages to all devices on the network")
 }
