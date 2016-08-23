@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "github.com/inconshreveable/mousetrap"
 	"github.com/bionicrm/clifx/cmd"
 	"fmt"
 	"os"
