@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-func Discover(conn controlifx.Connection, labelWhitelist, macWhitelist, ipWhitelist []string, timeout, count int) (devices []controlifx.Device, err error) {
+func Discover(conn controlifx.Connection, labelWhitelist, groupWhitelist, macWhitelist, ipWhitelist []string, timeout, count int) (devices []controlifx.Device, err error) {
 	// Used for count enforcement.
 	leftToDiscover := count
 
@@ -63,6 +63,24 @@ func Discover(conn controlifx.Connection, labelWhitelist, macWhitelist, ipWhitel
 		}
 	}
 
+	// Enforce group whitelist.
+	if len(groupWhitelist) > 0 {
+		msg := controlifx.GetGroup()
+
+		var recMsgs map[controlifx.Device]controlifx.ReceivableLanMessage
+		if recMsgs, err = conn.SendToAndGet(msg, devices, controlifx.TypeFilter(controlifx.StateGroupType)); err != nil {
+			return
+		}
+
+		devices = nil
+
+		for device, recMsg := range recMsgs {
+			if groupIsWhitelisted(groupWhitelist, string(recMsg.Payload.(*controlifx.StateGroupLanMessage).Label)) {
+				devices = append(devices, device)
+			}
+		}
+	}
+
 	return
 }
 
@@ -71,6 +89,18 @@ func labelIsWhitelisted(whitelist []string, label string) bool {
 
 	for _, v := range whitelist {
 		if label == strings.ToLower(v) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func groupIsWhitelisted(whitelist []string, group string) bool {
+	group = strings.ToLower(group)
+
+	for _, v := range whitelist {
+		if group == strings.ToLower(v) {
 			return true
 		}
 	}

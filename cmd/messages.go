@@ -309,12 +309,15 @@ func init() {
 	lightPowerCmd.Flags().IntVarP(&duration, "duration", "d", 0, "specifies the duration of the power transition in milliseconds")
 }
 
-func rgbToHsl(r, g, b uint8) (h, s, l uint16) {
+func rgbToHsl(rI, gI, bI uint8) (hI, sI, lI uint16) {
 	var (
-		min   uint8
-		max   uint8
+		r = float64(rI)/255
+		g = float64(gI)/255
+		b = float64(bI)/255
+
+		min   float64
+		max   float64
 		delta float64
-		lf    float64
 	)
 
 	if r < g && r < b {
@@ -327,27 +330,27 @@ func rgbToHsl(r, g, b uint8) (h, s, l uint16) {
 
 	if r > g && r > b {
 		max = r
-		delta = float64(max-min)
-		h = uint16((math.Mod(float64(g-b)/delta, 6))/6*0xffff)
+		delta = max-min
+		hI = uint16((math.Mod((g-b)/delta, 6))/6*0xffff)
 	} else if g > r && g > b {
 		max = g
-		delta = float64(max-min)
-		h = uint16((float64(b-r)/delta+2)/6*0xffff)
+		delta = max-min
+		hI = uint16(((b-r)/delta+2)/6*0xffff)
 	} else {
 		max = b
-		delta = float64(max-min)
-		h = uint16((float64(r-g)/delta+4)/6*0xffff)
+		delta = max-min
+		hI = uint16(((r-g)/delta+4)/6*0xffff)
 	}
 
-	lf = float64(max+min)/2
+	l := (max+min)/2
 
 	if delta == 0 {
-		s = 0
+		sI = 0
 	} else {
-		s = uint16(delta/(1-math.Abs(2*lf-1))*0xffff)
+		sI = uint16(delta/(1-math.Abs(2*l-1))*0xffff)
 	}
 
-	l = uint16(lf*0xffff)
+	lI = uint16(l*0xffff)
 
 	return
 }
@@ -378,20 +381,18 @@ func handle(requireResByDef bool, msg controlifx.SendableLanMessage) {
 	}
 	defer conn.Close()
 
-	discoveryNeeded := len(labels) > 0 || len(macs) > 0 || len(ips) > 0 || count > 0
+	discoveryNeeded := len(labels) > 0 || len(groups) > 0 || len(macs) > 0 || len(ips) > 0 || count > 0
 	resCode := getResponseCode(msg)
 
-	if requireAck {
+	if requireAck || ((requireResByDef || requireRes) && resCode == controlifx.AcknowledgementType) {
 		msg.Header.FrameAddress.AckRequired = true
 		resCode = controlifx.AcknowledgementType
-	} else if requireResByDef || requireRes {
-		msg.Header.FrameAddress.ResRequired = true
 	}
 
-	waitForResponses := msg.Header.FrameAddress.AckRequired || msg.Header.FrameAddress.ResRequired
+	waitForResponses := requireAck || requireResByDef || requireRes
 
 	if discoveryNeeded {
-		devices, err := protocol.Discover(conn, labels, macs, ips, timeout, count)
+		devices, err := protocol.Discover(conn, labels, groups, macs, ips, timeout, count)
 		if err != nil {
 			log.Fatalln(err)
 		}

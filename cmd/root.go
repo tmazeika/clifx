@@ -14,6 +14,7 @@ var (
 	// Flags.
 
 	labels []string
+	groups []string
 	macs   []string
 	ips    []string
 
@@ -28,6 +29,8 @@ var (
 func init() {
 	RootCmd.PersistentFlags().StringSliceVarP(&labels, "label", "l", []string{},
 		"the message will only be sent to devices with one of the given labels")
+	RootCmd.PersistentFlags().StringSliceVarP(&groups, "group", "g", []string{},
+		"the message will only be sent to devices in one of the given groups")
 	RootCmd.PersistentFlags().StringSliceVarP(&macs, "mac", "m", []string{},
 		"the message will only be sent to devices with one of the given MAC addresses")
 	RootCmd.PersistentFlags().StringSliceVarP(&ips, "ip", "i", []string{},
