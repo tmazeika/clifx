@@ -1,5 +1,5 @@
 # Clifx
-Command line LIFX device control.
+Command line LIFX device control. Implements [Controlifx](https://github.com/bionicrm/controlifx).
 
 ### Installation
 If you have Go installed and `$GOPATH/bin` in your path, just run
