@@ -28,8 +28,10 @@ func Discover(conn controlifx.Connection, labelWhitelist, groupWhitelist, macWhi
 			os.Exit(-1)
 		}
 
-		// Enforce IP whitelist.
-		register = ipIsWhitelisted(ipWhitelist, device.Addr.IP.String())
+		if register {
+			// Enforce IP whitelist.
+			register = ipIsWhitelisted(ipWhitelist, device.Addr.IP.String())
+		}
 
 		// Enforce count.
 		if count > 0 {
