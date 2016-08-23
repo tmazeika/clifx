@@ -16,42 +16,42 @@ import (
 var (
 	getServiceCmd = &cobra.Command{
 		Use:"service",
-		Short:"Acquires responses from all devices on the network",
+		Short:"acquires responses from all devices on the network",
 		Run:func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetService())
 		},
 	}
 	getHostInfoCmd = &cobra.Command{
 		Use:"hostinfo",
-		Short:"Gets the host MCU information",
+		Short:"gets the host MCU information",
 		Run:func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetHostInfo())
 		},
 	}
 	getHostFirmwareCmd = &cobra.Command{
 		Use:"hostfirmware",
-		Short:"Gets the host MCU firmware information",
+		Short:"gets the host MCU firmware information",
 		Run:func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetHostFirmware())
 		},
 	}
 	getWifiInfoCmd = &cobra.Command{
 		Use:"wifiinfo",
-		Short:"Gets the Wi-Fi subsystem information",
+		Short:"gets the Wi-Fi subsystem information",
 		Run:func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetWifiInfo())
 		},
 	}
 	getWifiFirmwareCmd = &cobra.Command{
 		Use:"wififirmware",
-		Short:"Gets the Wi-Fi subsystem firmware",
+		Short:"gets the Wi-Fi subsystem firmware",
 		Run:func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetWifiFirmware())
 		},
 	}
 	powerCmd = &cobra.Command{
 		Use:"power",
-		Short:"Gets or sets the power level",
+		Short:"gets or sets the power level",
 		ValidArgs:[]string{"[level]"},
 		Run:func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
@@ -75,7 +75,7 @@ var (
 	}
 	labelCmd = &cobra.Command{
 		Use:"label",
-		Short:"Gets or sets the label",
+		Short:"gets or sets the label",
 		ValidArgs:[]string{"[label]"},
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
@@ -94,35 +94,35 @@ var (
 	}
 	getVersionCmd = &cobra.Command{
 		Use:"version",
-		Short:"Gets the hardware version",
+		Short:"gets the hardware version",
 		Run:func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetVersion())
 		},
 	}
 	getInfoCmd = &cobra.Command{
 		Use:"info",
-		Short:"Gets the run-time information",
+		Short:"gets the run-time information",
 		Run:func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetInfo())
 		},
 	}
 	getLocationCmd = &cobra.Command{
 		Use:"location",
-		Short:"Gets the location information",
+		Short:"gets the location information",
 		Run:func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetLocation())
 		},
 	}
 	getGroupCmd = &cobra.Command{
 		Use:"group",
-		Short:"Gets the group membership information",
+		Short:"gets the group membership information",
 		Run:func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetGroup())
 		},
 	}
 	echoRequestCmd = &cobra.Command{
 		Use:"echo",
-		Short:"Requests an arbitrary payload be echoed back",
+		Short:"requests an arbitrary payload be echoed back",
 		ValidArgs:[]string{"<payload>"},
 		Run:func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
@@ -142,14 +142,14 @@ var (
 	}
 	lightGetCmd = &cobra.Command{
 		Use:"lightget",
-		Short:"Gets the light state",
+		Short:"gets the light state",
 		Run:func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.LightGet())
 		},
 	}
 	lightSetColorCmd = &cobra.Command{
 		Use:"lightcolor",
-		Short:"Sets the light color",
+		Short:"sets the light color",
 		Long:"Sets the light color to a hex value if 1 argument is supplied, HSBK if 3 or 4 are supplied, or RGB if --rgb is set and 3 arguments are supplied",
 		ValidArgs:[]string{"<hex> | <hue> <saturation> <brightness> [kelvin] | <red> <green> <blue>"},
 		Run:func(cmd *cobra.Command, args []string) {
@@ -254,7 +254,7 @@ var (
 	}
 	lightPowerCmd = &cobra.Command{
 		Use:"lightpower",
-		Short:"Gets or sets the light power level",
+		Short:"gets or sets the light power level",
 		ValidArgs:[]string{"[on|off]"},
 		Run:func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
