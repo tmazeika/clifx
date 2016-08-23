@@ -7,8 +7,8 @@ import (
 
 var (
 	RootCmd = &cobra.Command{
-		Use: "lifx",
-		Short: "Control LIFX devices from the command line",
+		Use:"clifx",
+		Short:"Control LIFX devices from the command line",
 	}
 
 	// Flags.
