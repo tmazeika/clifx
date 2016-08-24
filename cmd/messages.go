@@ -403,7 +403,7 @@ func handle(requireResByDef bool, msg controlifx.SendableLanMessage) {
 	discoveryNeeded := len(labels) > 0 || len(groups) > 0 || len(macs) > 0 || len(ips) > 0 || count > 0
 	resCode := getResponseCode(msg)
 
-	if requireAck || ((requireResByDef || requireRes) && resCode == controlifx.AcknowledgementType) {
+	if requireAck {
 		msg.Header.FrameAddress.AckRequired = true
 		resCode = controlifx.AcknowledgementType
 	}
@@ -453,13 +453,11 @@ func getResponseCode(msg controlifx.SendableLanMessage) uint16 {
 	case controlifx.GetPowerType:
 		return controlifx.StatePowerType
 	case controlifx.SetPowerType:
-		// ACK only.
-		return controlifx.AcknowledgementType
+		return controlifx.StatePowerType
 	case controlifx.GetLabelType:
 		return controlifx.StateLabelType
 	case controlifx.SetLabelType:
-		// ACK only.
-		return controlifx.AcknowledgementType
+		return controlifx.StateLabelType
 	case controlifx.GetVersionType:
 		return controlifx.StateVersionType
 	case controlifx.GetInfoType:
@@ -473,12 +471,10 @@ func getResponseCode(msg controlifx.SendableLanMessage) uint16 {
 	case controlifx.LightGetType:
 		return controlifx.LightStateType
 	case controlifx.LightSetColorType:
-		// As per the protocol.
 		return controlifx.LightStateType
 	case controlifx.LightGetPowerType:
 		return controlifx.LightStatePowerType
 	case controlifx.LightSetPowerType:
-		// As per the protocol.
 		return controlifx.LightStatePowerType
 	}
 
