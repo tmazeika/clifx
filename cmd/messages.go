@@ -158,22 +158,23 @@ var (
 				log.Fatalln("No color supplied")
 			}
 
-			const DefaultKelvin = 3500
+			validateKelvin := func() {
+				if kelvin < 2500 || kelvin > 9000 {
+					log.Fatalln("Color temperature (Kelvin) is out of the range 2500-9000")
+				}
+			}
+
+			validateKelvin()
 
 			msgPayload := controlifx.LightSetColorLanMessage{
 				Duration:uint32(duration),
 			}
-			setMsgPayloadColor := func(h, s, l, k uint16) {
+			setMsgPayloadColor := func(h, s, l uint16) {
 				msgPayload.Color = controlifx.HSBK{
 					Hue:h,
 					Saturation:s,
 					Brightness:l,
-					Kelvin:k,
-				}
-			}
-			validateKelvin := func(k int) {
-				if k < 2500 || k > 9000 {
-					log.Fatalln("Color temperature (Kelvin) is out of the range 2500-9000")
+					Kelvin:uint16(kelvin),
 				}
 			}
 
@@ -196,7 +197,7 @@ var (
 
 				h, s, l := rgbToHsl(uint8(r), uint8(g), uint8(b))
 
-				setMsgPayloadColor(h, s, l, DefaultKelvin)
+				setMsgPayloadColor(h, s, l)
 			} else if rgb {
 				// RGB.
 				if len(args) != 3 {
@@ -220,7 +221,7 @@ var (
 
 				h, s, l := rgbToHsl(uint8(r), uint8(g), uint8(b))
 
-				setMsgPayloadColor(h, s, l, DefaultKelvin)
+				setMsgPayloadColor(h, s, l)
 			} else if len(args) == 3 || len(args) == 4 {
 				// HSBK.
 				h, err := strconv.Atoi(args[0])
@@ -238,29 +239,21 @@ var (
 					log.Fatalln(err)
 				}
 
-				k := DefaultKelvin
-
 				if len(args) == 4 {
-					k, err = strconv.Atoi(args[3])
+					kelvin, err = strconv.Atoi(args[3])
 					if err != nil {
 						log.Fatalln(err)
 					}
-					validateKelvin(k)
+					validateKelvin()
 				}
 
 				toUint16 := func (x int, max float64) uint16 {
 					return uint16(float64(x)/max*math.MaxUint16+0.5)
 				}
 
-				setMsgPayloadColor(toUint16(h, 360), toUint16(s, 100), toUint16(l, 100), uint16(k))
+				setMsgPayloadColor(toUint16(h, 360), toUint16(s, 100), toUint16(l, 100))
 			} else {
 				log.Fatalln("Invalid color supplied")
-			}
-
-			if kelvin > 0 {
-				validateKelvin(kelvin)
-
-				msgPayload.Color.Kelvin = uint16(kelvin)
 			}
 
 			handle(false, controlifx.LightSetColor(msgPayload))
@@ -319,7 +312,7 @@ func init() {
 	)
 
 	lightSetColorCmd.Flags().BoolVar(&rgb, "rgb", false, "the color values are in red, green, and blue form")
-	lightSetColorCmd.Flags().IntVarP(&kelvin, "kelvin", "k", 0, "the color temperature (Kelvin)")
+	lightSetColorCmd.Flags().IntVarP(&kelvin, "kelvin", "k", 3500, "the color temperature (Kelvin)")
 	lightSetColorCmd.Flags().IntVarP(&duration, "duration", "d", 0, "the duration of the color transition in milliseconds")
 
 	lightPowerCmd.Flags().IntVarP(&duration, "duration", "d", 0, "the duration of the power transition in milliseconds")
