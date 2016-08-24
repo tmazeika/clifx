@@ -378,14 +378,10 @@ func lerpToUint16(rng float64, x int) uint16 {
 func handle(requireResByDef bool, msg controlifx.SendableLanMessage) {
 	var conn controlifx.Connection
 	var err error
-	if broadcast == "" {
-		conn, err = controlifx.Connect()
-	} else {
-		var bcastAddr *net.UDPAddr
-		bcastAddr, err = net.ResolveUDPAddr("udp", broadcast)
-		if err == nil {
-			conn, err = controlifx.ManualConnect(bcastAddr)
-		}
+	var bcastAddr *net.UDPAddr
+	bcastAddr, err = net.ResolveUDPAddr("udp", broadcast)
+	if err == nil {
+		conn, err = controlifx.ManualConnect(bcastAddr)
 	}
 	if err != nil {
 		log.Fatalln(err)

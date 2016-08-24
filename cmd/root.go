@@ -25,7 +25,7 @@ var (
 	requireRes bool
 	pretty     bool
 
-	broadcast  string
+	broadcast string
 )
 
 func init() {
@@ -50,6 +50,6 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&pretty, "pretty", "p", false,
 		"pretty prints any JSON output")
 
-	RootCmd.PersistentFlags().StringVar(&broadcast, "broadcast-addr", "",
+	RootCmd.PersistentFlags().StringVar(&broadcast, "broadcast-addr", "255.255.255.255:56700",
 		"overrides the broadcast address when sending messages to all devices on the network")
 }
