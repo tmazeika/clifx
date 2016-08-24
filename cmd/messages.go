@@ -158,7 +158,7 @@ var (
 				log.Fatalln("No color supplied")
 			}
 
-			const DefaultKelvin = 2500
+			const DefaultKelvin = 3500
 
 			msgPayload := controlifx.LightSetColorLanMessage{
 				Duration:uint32(duration),
