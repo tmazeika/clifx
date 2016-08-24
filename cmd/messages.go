@@ -410,6 +410,10 @@ func handle(requireResByDef bool, msg controlifx.SendableLanMessage) {
 
 	waitForResponses := requireAck || requireResByDef || requireRes
 
+	if !requireAck && waitForResponses {
+		msg.Header.FrameAddress.ResRequired = true
+	}
+
 	if discoveryNeeded {
 		devices, err := protocol.Discover(conn, labels, groups, macs, ips, timeout, count)
 		if err != nil {
