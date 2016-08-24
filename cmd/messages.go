@@ -171,6 +171,11 @@ var (
 					Kelvin:k,
 				}
 			}
+			validateKelvin := func(k int) {
+				if k < 2500 || k > 9000 {
+					log.Fatalln("Color temperature (Kelvin) is out of the range 2500-9000")
+				}
+			}
 
 			if len(args) == 1 {
 				// Hex.
@@ -240,14 +245,22 @@ var (
 					if err != nil {
 						log.Fatalln(err)
 					}
-					if k < 2500 || k > 9000 {
-						log.Fatalln("Color temperature (Kelvin) is out of the range 2500-9000")
-					}
+					validateKelvin(k)
 				}
 
-				setMsgPayloadColor(lerpToUint16(360, h), lerpToUint16(100, s), lerpToUint16(100, l), uint16(k))
+				toUint16 := func (x int, max float64) uint16 {
+					return uint16(float64(x)/max*math.MaxUint16+0.5)
+				}
+
+				setMsgPayloadColor(toUint16(h, 360), toUint16(s, 100), toUint16(l, 100), uint16(k))
 			} else {
 				log.Fatalln("Invalid color supplied")
+			}
+
+			if kelvin > 0 {
+				validateKelvin(kelvin)
+
+				msgPayload.Color.Kelvin = uint16(kelvin)
 			}
 
 			handle(false, controlifx.LightSetColor(msgPayload))
@@ -282,6 +295,7 @@ var (
 	// Flags.
 
 	rgb      bool
+	kelvin   int
 	duration int
 )
 
@@ -304,56 +318,58 @@ func init() {
 		lightPowerCmd,
 	)
 
-	lightSetColorCmd.Flags().BoolVar(&rgb, "rgb", false, "specifies that the color values are in red, green, and blue form")
-	lightSetColorCmd.Flags().IntVarP(&duration, "duration", "d", 0, "specifies the duration of the color transition in milliseconds")
+	lightSetColorCmd.Flags().BoolVar(&rgb, "rgb", false, "the color values are in red, green, and blue form")
+	lightSetColorCmd.Flags().IntVarP(&kelvin, "kelvin", "k", 0, "the color temperature (Kelvin)")
+	lightSetColorCmd.Flags().IntVarP(&duration, "duration", "d", 0, "the duration of the color transition in milliseconds")
 
-	lightPowerCmd.Flags().IntVarP(&duration, "duration", "d", 0, "specifies the duration of the power transition in milliseconds")
+	lightPowerCmd.Flags().IntVarP(&duration, "duration", "d", 0, "the duration of the power transition in milliseconds")
 }
 
-func rgbToHsl(rI, gI, bI uint8) (hI, sI, lI uint16) {
-	var (
-		r = float64(rI)/255
-		g = float64(gI)/255
-		b = float64(bI)/255
+func rgbToHsl(rI, gI, bI uint8) (uint16, uint16, uint16) {
+	r := float64(rI)/255
+	g := float64(gI)/255
+	b := float64(bI)/255
 
-		min   float64
-		max   float64
-		delta float64
-	)
+	max := math.Max(r, math.Max(g, b))
+	min := math.Min(r, math.Min(g, b))
 
-	if r < g && r < b {
-		min = r
-	} else if g < r && g < b {
-		min = g
+	h := (max+min)/2
+	s := h
+	l := s
+
+	if max == min {
+		h = 0
+		s = 0
 	} else {
-		min = b
+		d := max-min
+
+		if l > 0.5 {
+			s = d/(2-max-min)
+		} else {
+			s = d/(max+min)
+		}
+
+		switch max {
+		case r:
+			if g < b {
+				h = (g-b)/d+6
+			} else {
+				h = (g-b)/d
+			}
+		case g:
+			h = (b-r)/d+2
+		case b:
+			h = (r-g)/d+4
+		}
+
+		h /= 6
 	}
 
-	if r > g && r > b {
-		max = r
-		delta = max-min
-		hI = uint16((math.Mod((g-b)/delta, 6))/6*0xffff)
-	} else if g > r && g > b {
-		max = g
-		delta = max-min
-		hI = uint16(((b-r)/delta+2)/6*0xffff)
-	} else {
-		max = b
-		delta = max-min
-		hI = uint16(((r-g)/delta+4)/6*0xffff)
+	toUint16 := func(x float64) uint16 {
+		return uint16(x*math.MaxUint16+0.5)
 	}
 
-	l := (max+min)/2
-
-	if delta == 0 {
-		sI = 0
-	} else {
-		sI = uint16(delta/(1-math.Abs(2*l-1))*0xffff)
-	}
-
-	lI = uint16(l*0xffff)
-
-	return
+	return toUint16(h), toUint16(s), toUint16(l)
 }
 
 func argToBool(arg string) (bool, error) {
@@ -369,10 +385,6 @@ func argToBool(arg string) (bool, error) {
 	default:
 		return false, errors.New("Must be 'on' or 'off'")
 	}
-}
-
-func lerpToUint16(rng float64, x int) uint16 {
-	return uint16(float64(x)/rng*math.MaxUint16+0.5)
 }
 
 func handle(requireResByDef bool, msg controlifx.SendableLanMessage) {
