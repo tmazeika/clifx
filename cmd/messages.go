@@ -63,13 +63,13 @@ var (
 					log.Fatalln(err)
 				}
 
-				level := 0
+				var level uint16
 				if powerOn {
-					level = 65535
+					level = 0xffff
 				}
 
 				handle(false, controlifx.SetPower(controlifx.SetPowerLanMessage{
-					Level:controlifx.PowerLevel(level),
+					Level:level,
 				}))
 			}
 		},
@@ -88,7 +88,7 @@ var (
 				}
 
 				handle(false, controlifx.SetLabel(controlifx.SetLabelLanMessage{
-					Label:controlifx.Label(label),
+					Label:label,
 				}))
 			}
 		},
@@ -272,13 +272,13 @@ var (
 					log.Fatalln(err)
 				}
 
-				level := 0
+				var level uint16
 				if powerOn {
-					level = 65535
+					level = 0xffff
 				}
 
 				handle(false, controlifx.LightSetPower(controlifx.LightSetPowerLanMessage{
-					Level:controlifx.PowerLevel(level),
+					Level:level,
 					Duration:uint32(duration),
 				}))
 			}
