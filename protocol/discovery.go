@@ -1,12 +1,12 @@
 package protocol
 
 import (
-	"gopkg.in/golifx/controlifx.v1"
-	"net"
-	"strings"
 	"encoding/binary"
 	"fmt"
+	"gopkg.in/golifx/controlifx.v1"
+	"net"
 	"os"
+	"strings"
 )
 
 func Discover(conn controlifx.Connection, labelWhitelist, groupWhitelist, macWhitelist, ipWhitelist []string, timeout, count int) (devices []controlifx.Device, err error) {
@@ -129,7 +129,7 @@ func macIsWhitelisted(whitelist []string, mac uint64) (bool, error) {
 		}
 	}
 
-	NotWanted:
+NotWanted:
 	return false, err
 }
 

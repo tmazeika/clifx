@@ -1,60 +1,60 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/bionicrm/clifx/protocol"
 	"github.com/spf13/cobra"
 	"gopkg.in/golifx/controlifx.v1"
+	"log"
 	"math"
 	"net"
-	"errors"
 	"strconv"
-	"bytes"
-	"github.com/bionicrm/clifx/protocol"
-	"encoding/json"
-	"fmt"
-	"log"
 )
 
 var (
 	getServiceCmd = &cobra.Command{
-		Use:"service",
-		Short:"acquires responses from all devices on the network",
-		Run:func(cmd *cobra.Command, args []string) {
+		Use:   "service",
+		Short: "acquires responses from all devices on the network",
+		Run: func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetService())
 		},
 	}
 	getHostInfoCmd = &cobra.Command{
-		Use:"hostinfo",
-		Short:"gets the host MCU information",
-		Run:func(cmd *cobra.Command, args []string) {
+		Use:   "hostinfo",
+		Short: "gets the host MCU information",
+		Run: func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetHostInfo())
 		},
 	}
 	getHostFirmwareCmd = &cobra.Command{
-		Use:"hostfirmware",
-		Short:"gets the host MCU firmware information",
-		Run:func(cmd *cobra.Command, args []string) {
+		Use:   "hostfirmware",
+		Short: "gets the host MCU firmware information",
+		Run: func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetHostFirmware())
 		},
 	}
 	getWifiInfoCmd = &cobra.Command{
-		Use:"wifiinfo",
-		Short:"gets the Wi-Fi subsystem information",
-		Run:func(cmd *cobra.Command, args []string) {
+		Use:   "wifiinfo",
+		Short: "gets the Wi-Fi subsystem information",
+		Run: func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetWifiInfo())
 		},
 	}
 	getWifiFirmwareCmd = &cobra.Command{
-		Use:"wififirmware",
-		Short:"gets the Wi-Fi subsystem firmware",
-		Run:func(cmd *cobra.Command, args []string) {
+		Use:   "wififirmware",
+		Short: "gets the Wi-Fi subsystem firmware",
+		Run: func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetWifiFirmware())
 		},
 	}
 	powerCmd = &cobra.Command{
-		Use:"power",
-		Short:"gets or sets the power level",
-		ValidArgs:[]string{"[level]"},
-		Run:func(cmd *cobra.Command, args []string) {
+		Use:       "power",
+		Short:     "gets or sets the power level",
+		ValidArgs: []string{"[level]"},
+		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				handle(true, controlifx.GetPower())
 			} else {
@@ -69,15 +69,15 @@ var (
 				}
 
 				handle(false, controlifx.SetPower(controlifx.SetPowerLanMessage{
-					Level:level,
+					Level: level,
 				}))
 			}
 		},
 	}
 	labelCmd = &cobra.Command{
-		Use:"label",
-		Short:"gets or sets the label",
-		ValidArgs:[]string{"[label]"},
+		Use:       "label",
+		Short:     "gets or sets the label",
+		ValidArgs: []string{"[label]"},
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				handle(true, controlifx.GetLabel())
@@ -88,44 +88,44 @@ var (
 				}
 
 				handle(false, controlifx.SetLabel(controlifx.SetLabelLanMessage{
-					Label:label,
+					Label: label,
 				}))
 			}
 		},
 	}
 	getVersionCmd = &cobra.Command{
-		Use:"version",
-		Short:"gets the hardware version",
-		Run:func(cmd *cobra.Command, args []string) {
+		Use:   "version",
+		Short: "gets the hardware version",
+		Run: func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetVersion())
 		},
 	}
 	getInfoCmd = &cobra.Command{
-		Use:"info",
-		Short:"gets the run-time information",
-		Run:func(cmd *cobra.Command, args []string) {
+		Use:   "info",
+		Short: "gets the run-time information",
+		Run: func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetInfo())
 		},
 	}
 	getLocationCmd = &cobra.Command{
-		Use:"location",
-		Short:"gets the location information",
-		Run:func(cmd *cobra.Command, args []string) {
+		Use:   "location",
+		Short: "gets the location information",
+		Run: func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetLocation())
 		},
 	}
 	getGroupCmd = &cobra.Command{
-		Use:"group",
-		Short:"gets the group membership information",
-		Run:func(cmd *cobra.Command, args []string) {
+		Use:   "group",
+		Short: "gets the group membership information",
+		Run: func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.GetGroup())
 		},
 	}
 	echoRequestCmd = &cobra.Command{
-		Use:"echo",
-		Short:"requests an arbitrary payload be echoed back",
-		ValidArgs:[]string{"<payload>"},
-		Run:func(cmd *cobra.Command, args []string) {
+		Use:       "echo",
+		Short:     "requests an arbitrary payload be echoed back",
+		ValidArgs: []string{"<payload>"},
+		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				args = []string{""}
 			}
@@ -142,18 +142,18 @@ var (
 		},
 	}
 	lightGetCmd = &cobra.Command{
-		Use:"lightget",
-		Short:"gets the light state",
-		Run:func(cmd *cobra.Command, args []string) {
+		Use:   "lightget",
+		Short: "gets the light state",
+		Run: func(cmd *cobra.Command, args []string) {
 			handle(true, controlifx.LightGet())
 		},
 	}
 	lightSetColorCmd = &cobra.Command{
-		Use:"lightcolor",
-		Short:"sets the light color",
-		Long:"Sets the light color to a hex value if 1 argument is supplied, HSBK if 3 or 4 are supplied, or RGB if --rgb is set and 3 arguments are supplied",
-		ValidArgs:[]string{"<hex> | <hue> <saturation> <brightness> [kelvin] | <red> <green> <blue>"},
-		Run:func(cmd *cobra.Command, args []string) {
+		Use:       "lightcolor",
+		Short:     "sets the light color",
+		Long:      "Sets the light color to a hex value if 1 argument is supplied, HSBK if 3 or 4 are supplied, or RGB if --rgb is set and 3 arguments are supplied",
+		ValidArgs: []string{"<hex> | <hue> <saturation> <brightness> [kelvin] | <red> <green> <blue>"},
+		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				log.Fatalln("No color supplied")
 			}
@@ -167,14 +167,14 @@ var (
 			validateKelvin()
 
 			msgPayload := controlifx.LightSetColorLanMessage{
-				Duration:uint32(duration),
+				Duration: uint32(duration),
 			}
 			setMsgPayloadColor := func(h, s, l uint16) {
 				msgPayload.Color = controlifx.HSBK{
-					Hue:h,
-					Saturation:s,
-					Brightness:l,
-					Kelvin:uint16(kelvin),
+					Hue:        h,
+					Saturation: s,
+					Brightness: l,
+					Kelvin:     uint16(kelvin),
 				}
 			}
 
@@ -247,8 +247,8 @@ var (
 					validateKelvin()
 				}
 
-				toUint16 := func (x int, max float64) uint16 {
-					return uint16(float64(x)/max*math.MaxUint16+0.5)
+				toUint16 := func(x int, max float64) uint16 {
+					return uint16(float64(x)/max*math.MaxUint16 + 0.5)
 				}
 
 				setMsgPayloadColor(toUint16(h, 360), toUint16(s, 100), toUint16(l, 100))
@@ -260,10 +260,10 @@ var (
 		},
 	}
 	lightPowerCmd = &cobra.Command{
-		Use:"lightpower",
-		Short:"gets or sets the light power level",
-		ValidArgs:[]string{"[on|off]"},
-		Run:func(cmd *cobra.Command, args []string) {
+		Use:       "lightpower",
+		Short:     "gets or sets the light power level",
+		ValidArgs: []string{"[on|off]"},
+		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				handle(true, controlifx.LightGetPower())
 			} else {
@@ -278,8 +278,8 @@ var (
 				}
 
 				handle(false, controlifx.LightSetPower(controlifx.LightSetPowerLanMessage{
-					Level:level,
-					Duration:uint32(duration),
+					Level:    level,
+					Duration: uint32(duration),
 				}))
 			}
 		},
@@ -319,14 +319,14 @@ func init() {
 }
 
 func rgbToHsl(rI, gI, bI uint8) (uint16, uint16, uint16) {
-	r := float64(rI)/255
-	g := float64(gI)/255
-	b := float64(bI)/255
+	r := float64(rI) / 255
+	g := float64(gI) / 255
+	b := float64(bI) / 255
 
 	max := math.Max(r, math.Max(g, b))
 	min := math.Min(r, math.Min(g, b))
 
-	h := (max+min)/2
+	h := (max + min) / 2
 	s := h
 	l := s
 
@@ -334,32 +334,32 @@ func rgbToHsl(rI, gI, bI uint8) (uint16, uint16, uint16) {
 		h = 0
 		s = 0
 	} else {
-		d := max-min
+		d := max - min
 
 		if l > 0.5 {
-			s = d/(2-max-min)
+			s = d / (2 - max - min)
 		} else {
-			s = d/(max+min)
+			s = d / (max + min)
 		}
 
 		switch max {
 		case r:
 			if g < b {
-				h = (g-b)/d+6
+				h = (g-b)/d + 6
 			} else {
-				h = (g-b)/d
+				h = (g - b) / d
 			}
 		case g:
-			h = (b-r)/d+2
+			h = (b-r)/d + 2
 		case b:
-			h = (r-g)/d+4
+			h = (r-g)/d + 4
 		}
 
 		h /= 6
 	}
 
 	toUint16 := func(x float64) uint16 {
-		return uint16(x*math.MaxUint16+0.5)
+		return uint16(x*math.MaxUint16 + 0.5)
 	}
 
 	return toUint16(h), toUint16(s), toUint16(l)
@@ -490,12 +490,12 @@ func printResponses(recMsgs map[controlifx.Device]controlifx.ReceivableLanMessag
 			msg.Payload = nil
 		}
 
-		responses = append(responses, struct{
+		responses = append(responses, struct {
 			Device   controlifx.Device
 			Response interface{} `json:",omitempty"`
 		}{
-			Device:device,
-			Response:createFriendlyPayload(msg.Payload),
+			Device:   device,
+			Response: createFriendlyPayload(msg.Payload),
 		})
 	}
 
@@ -514,10 +514,10 @@ func printResponses(recMsgs map[controlifx.Device]controlifx.ReceivableLanMessag
 func createFriendlyPayload(payload interface{}) interface{} {
 	switch payload.(type) {
 	case *controlifx.EchoResponseLanMessage:
-		return struct{
+		return struct {
 			Payload string
 		}{
-			Payload:string(bytes.TrimRight(payload.(*controlifx.EchoResponseLanMessage).Payload[:], "\x00")),
+			Payload: string(bytes.TrimRight(payload.(*controlifx.EchoResponseLanMessage).Payload[:], "\x00")),
 		}
 	}
 
