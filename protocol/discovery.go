@@ -1,7 +1,7 @@
 package protocol
 
 import (
-	"github.com/bionicrm/controlifx"
+	"gopkg.in/golifx/controlifx.v1"
 	"net"
 	"strings"
 	"encoding/binary"

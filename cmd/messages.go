@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/bionicrm/controlifx"
+	"gopkg.in/golifx/controlifx.v1"
 	"math"
 	"net"
 	"errors"
