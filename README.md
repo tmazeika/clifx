@@ -15,6 +15,7 @@ In addition, responses are able to be received and printed in JSON form. This ma
     - [By IP](#by-ip)
     - [Count](#count)
   - [Light color](#light-color)
+    - [Color temperature](#color-temperature)
     - [Hex](#hex)
     - [RGB](#rgb)
     - [HSL(K)](#hslk)
@@ -69,7 +70,13 @@ $ clifx -c 3 power
 #### Light color
 You can set the color of your lights to a hex, RGB, or HSL value with a color temperature. All of the following examples will set the color of your lights to the same shade of yellow.
 
-The `-k <integer>` option can be used with the `lightcolor` command, which specifies the color temperature in Kelvin of the light. This value must be in the range 2500..9000, inclusive.
+###### Color temperature
+This example uses a hex triplet for specifying the color, along with the `-k` option to specify the color temperature. This value must be within the range 2500..9000, inclusive. The lower the saturation, the more the color temperature comes into play:
+
+```bash
+$ clifx lightcolor d0bb71 -k 2500
+$ clifx lightcolor d0bb71 -k 9000
+```
 
 ###### Hex
 ```bash
