@@ -109,7 +109,7 @@ $ clifx lightcolor 47 50 63 9000
 ```
 
 #### Getting responses
-Sometimes you may only care about getting an acknowledgement that a message was received. Or, you may wish to have the JSON output from either an acknowledgement or response to be pretty printed. Also, some commands, like `power <level>`, won't return a response unless you ask for one. Here's how to do all of that...
+Sometimes you may only care about getting an acknowledgement that a message was received. Or, you may wish to have the JSON output from either an acknowledgement or response to be pretty printed. Also, some commands, like `power <on|off>`, won't return a response unless you ask for one. Here's how to do all of that...
 
 ###### Acknowledgements
 An acknowledgement is simply a response sent from the device to *acknowledge* that it received and processed a message. The `-a` flag requires such a response, and only prints out the device address and its MAC address. This flag *cannot* be used in addition to the `-r` flag, as mentioned below:
