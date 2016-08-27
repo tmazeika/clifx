@@ -26,7 +26,7 @@ In addition, responses are able to be received and printed in JSON form. This ma
 - [Additional Help](#additional-help)
 
 ## Installation
-If you have Go installed and `$GOPATH/bin` in your path, just run `go get -u github.com/golifx/clifx` and the `clifx` binary will be available. Otherwise, [download the latest release](https://github.com/bionicrm/clifx/releases) for your platform, unarchive it, and move the binary to some location in your path (try `/usr/bin/`).
+If you have Go installed and `$GOPATH/bin` in your path, just run `go get -u github.com/golifx/clifx` and the `clifx` binary will be available. Otherwise, [download the latest release](https://github.com/golifx/clifx/releases) for your platform, unarchive it, and move the binary to some location in your path (try `/usr/bin/`).
 
 ## Usage
 #### Choosing devices
