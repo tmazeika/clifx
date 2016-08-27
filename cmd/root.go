@@ -51,5 +51,5 @@ func init() {
 		"pretty prints any JSON output")
 
 	RootCmd.PersistentFlags().StringVar(&broadcast, "broadcast-addr", "255.255.255.255:56700",
-		"overrides the broadcast address when sending messages to all devices on the network")
+		"the address to broadcast to when sending messages to all devices on the network")
 }
