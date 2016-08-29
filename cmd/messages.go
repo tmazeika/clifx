@@ -121,6 +121,13 @@ var (
 			handle(true, controlifx.GetGroup())
 		},
 	}
+	getOwnerCmd = &cobra.Command{
+		Use: "owner",
+		Short: "*undocumented*",
+		Run: func(cmd *cobra.Command, args []string) {
+			handle(true, controlifx.GetOwner())
+		},
+	}
 	echoRequestCmd = &cobra.Command{
 		Use:       "echo",
 		Short:     "requests an arbitrary payload be echoed back",
@@ -305,6 +312,7 @@ func init() {
 		getInfoCmd,
 		getLocationCmd,
 		getGroupCmd,
+		getOwnerCmd,
 		echoRequestCmd,
 		lightGetCmd,
 		lightSetColorCmd,
@@ -463,6 +471,8 @@ func getResponseCode(msg controlifx.SendableLanMessage) uint16 {
 		return controlifx.StateLocationType
 	case controlifx.GetGroupType:
 		return controlifx.StateGroupType
+	case controlifx.GetOwnerType:
+		return controlifx.StateOwnerType
 	case controlifx.EchoRequestType:
 		return controlifx.EchoResponseType
 	case controlifx.LightGetType:
