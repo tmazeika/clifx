@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/bionicrm/clifx/protocol"
 	"github.com/spf13/cobra"
-	"gopkg.in/golifx/controlifx.v1"
+	"gopkg.in/lifx-tools/controlifx.v1"
 	"log"
 	"math"
 	"net"
