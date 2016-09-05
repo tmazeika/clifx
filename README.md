@@ -1,7 +1,7 @@
 # Clifx
 Command-line interface for LIFX device control.
 
-Clifx is a simple yet powerful command line utility for controlling LIFX devices over the LAN, or even your local machine (see [Implifx](https://github.com/golifx/implifx)). As such, every possible device message is able to be sent and received, along with their appropriate payloads. Commands are simple. For example, to set the color of the lights in your bedroom to a nice green shade specified in RGB, you can use `clifx -g bedroom lightcolor --rgb 75 221 88`
+Clifx is a simple yet powerful command line utility for controlling LIFX devices over the LAN, or even your local machine (see [Implifx](https://github.com/lifx-tools/implifx)). As such, every possible device message is able to be sent and received, along with their appropriate payloads. Commands are simple. For example, to set the color of the lights in your bedroom to a nice green shade specified in RGB, you can use `clifx -g bedroom lightcolor --rgb 75 221 88`
 
 In addition, responses are able to be received and printed in JSON form. This makes it easy to parse the responses sent back by devices.
 
@@ -26,7 +26,7 @@ In addition, responses are able to be received and printed in JSON form. This ma
 - [Additional Help](#additional-help)
 
 ## Installation
-If you have Go installed and `$GOPATH/bin` in your path, just run `go get -u github.com/golifx/clifx` and the `clifx` binary will be available. Otherwise, [download the latest release](https://github.com/golifx/clifx/releases) for your platform, unarchive it, and move the binary to some location in your path (try `/usr/bin/`).
+If you have Go installed and `$GOPATH/bin` in your path, just run `go get -u github.com/lifx-tools/clifx` and the `clifx` binary will be available. Otherwise, [download the latest release](https://github.com/lifx-tools/clifx/releases) for your platform, unarchive it, and move the binary to some location in your path (try `/usr/bin/`).
 
 ## Usage
 #### Choosing devices
@@ -168,4 +168,4 @@ Example output:
 ```
 
 ## Additional Help
-Run `clifx` or `clifx <command> --help` to learn more about all or one of the commands, flags, and options. Visit [#golifx](http://webchat.freenode.net?randomnick=1&channels=%23golifx&prompt=1) on chat.freenode.net to get help, ask questions, or discuss ideas.
+Run `clifx` or `clifx <command> --help` to learn more about all or one of the commands, flags, and options. Visit [#lifx-tools](http://webchat.freenode.net?randomnick=1&channels=%23lifx-tools&prompt=1) on chat.freenode.net to get help, ask questions, or discuss ideas.
